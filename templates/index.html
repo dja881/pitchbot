@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Revenue Playbook Generator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen">
+
+  <!-- 1. Header -->
+  <header class="bg-white shadow">
+    <div class="container mx-auto flex items-center py-4 px-6">
+      <div class="h-8 w-8 bg-gray-200 rounded mr-4"></div>
+      <div>
+        <nav class="text-sm text-gray-600">
+          <a href="#" class="hover:underline">Home</a> › Revenue Playbook
+        </nav>
+        <h1 class="text-2xl font-bold">Revenue Playbook Generator</h1>
+        <p class="text-gray-600 text-sm">
+          Generate tailored pitch decks, emails, and upsell plans in seconds.
+        </p>
+      </div>
+    </div>
+  </header>
+
+  <!-- 2. Main Content -->
+  <main class="container mx-auto flex-1 py-6 px-6 flex flex-col lg:flex-row gap-6">
+
+    <!-- 2a. Input Panel -->
+    <aside class="w-full lg:w-1/3 bg-white p-6 rounded shadow flex flex-col">
+      <h2 class="text-lg font-semibold mb-4">Merchant Profile</h2>
+      <form method="POST" class="flex-1 space-y-6 overflow-auto">
+        <!-- Step 1 -->
+        <details open class="mb-4">
+          <summary class="font-medium cursor-pointer">Step 1: Merchant Basics</summary>
+          <div class="mt-3 space-y-3">
+            <label class="block">
+              <span>🏷️ Industry</span>
+              <select name="industry" required class="w-full p-2 border rounded">
+                <option value="" disabled selected>Select industry</option>
+                <option>Fashion & Apparel</option>
+                <option>Beauty & Personal Care</option>
+                <option>Food & Beverage</option>
+                <option>Home & Living</option>
+                <option>Electronics</option>
+                <option>Jewellery & Accessories</option>
+                <option>Pet Supplies</option>
+                <option>Health & Fitness</option>
+                <option>Kids & Baby</option>
+                <option>Others (Generic D2C)</option>
+              </select>
+            </label>
+            <label class="block">
+              <span>💰 AOV</span>
+              <select name="aov" required class="w-full p-2 border rounded">
+                <option value="" disabled selected>Select AOV</option>
+                <option>Under ₹500</option>
+                <option>₹500 – ₹1,500</option>
+                <option>₹1,500 – ₹3,000</option>
+                <option>₹3,000 – ₹5,000</option>
+                <option>₹5,000 – ₹10,000</option>
+                <option>₹10,000+</option>
+              </select>
+            </label>
+            <label class="block">
+              <span>🌍 Geography</span>
+              <select name="geo" required class="w-full p-2 border rounded">
+                <option value="" disabled selected>Select geography</option>
+                <option>India</option>
+                <option>UAE</option>
+                <option>Saudi Arabia</option>
+                <option>SEA (Indonesia, Philippines, etc.)</option>
+                <option>US</option>
+                <option>Global</option>
+              </select>
+            </label>
+          </div>
+        </details>
+
+        <!-- Step 2 -->
+        <details class="mb-4">
+          <summary class="font-medium cursor-pointer">Step 2: Goals & Tools</summary>
+          <div class="mt-3 space-y-3">
+            <label class="block">
+              <span>🎯 Primary Goal</span>
+              <select name="goal" required class="w-full p-2 border rounded">
+                <option value="" disabled selected>Select goal</option>
+                <option>Cart Recovery</option>
+                <option>Retention</option>
+                <option>Upsell</option>
+                <option>Subscriber Growth</option>
+                <option>Customer Feedback</option>
+              </select>
+            </label>
+            <label class="block">
+              <span>📈 Store Maturity</span>
+              <select name="maturity" required class="w-full p-2 border rounded">
+                <option value="" disabled selected>Select maturity</option>
+                <option>New</option>
+                <option>Growing</option>
+                <option>Established</option>
+                <option>Enterprise</option>
+              </select>
+            </label>
+          </div>
+        </details>
+        <!-- Step 3 -->
+        <details class="mb-4">
+          <summary class="font-medium cursor-pointer">Step 3: Playbook Format</summary>
+          <div class="mt-3 space-y-3">
+            <label class="block">
+              <span>📝 Playbook Format</span>
+              <select name="style" required class="w-full p-2 border rounded">
+                <option value="" disabled selected>Select format</option>
+                <option>3-paragraph Narrative (Default)</option>
+                <option>5-Line WhatsApp Pitch</option>
+                <option>Cold Email Template</option>
+                <option>Deck Slide Suggestions</option>
+                <option>Formal vs Casual Comparison</option>
+              </select>
+            </label>
+          </div>
+        </details>
+        <button type="submit"
+                class="mt-auto w-full bg-blue-600 text-white p-3 rounded hover:bg-blue-700 transition">
+          Generate Playbook
+        </button>
+      </form>
+    </aside>
+
+    <!-- 2b. Output / Chat Panel -->
+    <section class="w-full lg:w-2/3 bg-white p-6 rounded shadow flex flex-col relative">
+
+      <!-- Loading Overlay -->
+      <div id="loadingOverlay"
+           class="absolute inset-0 bg-white bg-opacity-80 flex items-center justify-center z-10 hidden">
+        <div class="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600"></div>
+      </div>
+
+      <!-- Chat Messages -->
+      <div id="chatContainer" class="flex-1 overflow-auto space-y-4 mb-4 pr-2">
+        {% if session.get('messages') %}
+          {% for msg in session.messages %}
+            <div class="p-4 rounded-lg {{ 'bg-blue-50 self-start' if msg.role=='assistant' else 'bg-green-50 self-end' }} max-w-full md:max-w-2xl">
+              {% for para in msg.content.split('\n\n') %}
+                <p class="mb-4 text-gray-800 leading-relaxed">{{ para }}</p>
+              {% endfor %}
+            </div>
+          {% endfor %}
+        {% else %}
+          <p class="text-gray-500">Your playbook will appear here.</p>
+        {% endif %}
+      </div>
+
+      <!-- Refinement Input -->
+      <form id="chatForm" method="POST" class="flex items-center gap-2 mb-4">
+        <input type="text" name="user_message"
+               placeholder="Ask to refine the pitch…"
+               class="flex-1 p-2 border rounded"
+               autocomplete="off"
+               {% if not session.get('messages') %} disabled {% endif %}>
+        <button type="submit"
+                class="bg-blue-600 text-white p-2 rounded hover:bg-blue-700"
+                {% if not session.get('messages') %} disabled {% endif %}>
+          Send
+        </button>
+      </form>
+
+      <!-- Action Bar -->
+      <div class="sticky bottom-0 bg-white pt-4 border-t flex gap-3">
+        <button onclick="sendEmail()"
+                class="flex-1 bg-green-600 text-white p-2 rounded hover:bg-green-700">
+          Send as Email
+        </button>
+        <button onclick="copyAll()"
+                class="flex-1 bg-yellow-500 text-white p-2 rounded hover:bg-yellow-600">
+          Copy All
+        </button>
+        <form action="{{ url_for('download_ppt') }}" method="POST" class="flex-1">
+          <input type="hidden" name="playbook"
+                 value="{{ session.messages[0]['content'] if session.get('messages') else '' }}">
+          <button type="submit"
+                  class="w-full bg-purple-600 text-white p-2 rounded hover:bg-purple-700">
+            Download PPT
+          </button>
+        </form>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- 3. Footer -->
+  <footer class="bg-white py-4 mt-auto">
+    <div class="container mx-auto text-center text-sm text-gray-600">
+      Live Support • v1.0 • Docs
+    </div>
+  </footer>
+
+  <!-- 4. Scripts -->
+  <script>
+    document.querySelectorAll('form').forEach(f =>
+      f.addEventListener('submit', () =>
+        document.getElementById('loadingOverlay').classList.remove('hidden')
+      )
+    );
+    window.addEventListener('load', () =>
+      document.getElementById('loadingOverlay').classList.add('hidden')
+    );
+
+    function sendEmail() {
+      const subj = encodeURIComponent('Your BiteSpeed Playbook');
+      const body = encodeURIComponent(`{{ session.messages[0]['content'] if session.get('messages') else '' }}`);
+      window.location = `mailto:?subject=${subj}&body=${body}`;
+    }
+
+    function copyAll() {
+      const txt = `{{ session.messages[0]['content'] if session.get('messages') else '' }}`;
+      navigator.clipboard.writeText(txt);
+      alert('Playbook copied!');
+    }
+  </script>
+</body>
+</html>
