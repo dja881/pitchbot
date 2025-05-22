@@ -1,6 +1,6 @@
 import os
 from flask import Flask, render_template, request, session, send_file
-from openai import OpenAI
+import openai
 from pptx import Presentation
 from pptx.enum.shapes import PP_PLACEHOLDER_TYPE
 from io import BytesIO
@@ -8,7 +8,8 @@ from io import BytesIO
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "super-secret-dev-key")
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+# Set OpenAI API key
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 STYLE_PROMPTS = {
     '3-paragraph Narrative (Default)':
@@ -101,6 +102,7 @@ Do not use emojis.
 """
 }
 
+
 def set_slide_title(slide, text):
     title_shape = slide.shapes.title
     if title_shape:
@@ -136,15 +138,15 @@ def index():
         if user_refine and session['messages']:
             msgs = session['messages']
             msgs.append({'role': 'user', 'content': user_refine})
-            resp = client.chat.completions.create(model="gpt-4o-mini",
-                                                  messages=[{
-                                                      'role':
-                                                      m['role'],
-                                                      'content':
-                                                      m['content']
-                                                  } for m in msgs],
-                                                  temperature=0.7)
-            reply = resp.choices[0].message.content.strip()
+            response = openai.ChatCompletion.create(model="gpt-4o",
+                                                    messages=[{
+                                                        'role':
+                                                        m['role'],
+                                                        'content':
+                                                        m['content']
+                                                    } for m in msgs],
+                                                    temperature=0.7)
+            reply = response.choices[0].message.content.strip()
             msgs.append({'role': 'assistant', 'content': reply})
             session['messages'] = msgs
         else:
@@ -162,13 +164,13 @@ def index():
                 data['style'],
                 STYLE_PROMPTS['3-paragraph Narrative (Default)'])
             prompt = prompt_template.format(**data)
-            resp = client.chat.completions.create(model="gpt-4o-mini",
-                                                  messages=[{
-                                                      'role': 'user',
-                                                      'content': prompt
-                                                  }],
-                                                  temperature=0.7)
-            pitch = resp.choices[0].message.content.strip()
+            response = openai.ChatCompletion.create(model="gpt-4o",
+                                                    messages=[{
+                                                        'role': 'user',
+                                                        'content': prompt
+                                                    }],
+                                                    temperature=0.7)
+            pitch = response.choices[0].message.content.strip()
             session['messages'] = [{'role': 'assistant', 'content': pitch}]
 
     return render_template('index.html')
